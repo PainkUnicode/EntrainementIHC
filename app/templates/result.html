@@ -5,9 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Résultats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Résultats de l'extraction d'images</h1>
-    <img src="{{ url_for('serve_output_frames', filename=os.path.basename(result_image)) }}" alt="Collage Image">
+    <header>
+        <h1>Résultats de l'extraction d'images</h1>
+    </header>
+    <main>
+        {% for result_image in result_images %}
+            <img class="result-image" src="{{ url_for('serve_output_frames', filename=os.path.basename(result_image)) }}" alt="Collage Image">
+        {% endfor %}
+    </main>
+    <form action="/process_video" method="post">
+        <button type="submit">Relancer le processus</button>
+    </form>
 </body>
 </html>
