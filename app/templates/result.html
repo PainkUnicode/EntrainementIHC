@@ -1,0 +1,13 @@
+<!-- templates/result.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats</title>
+</head>
+<body>
+    <h1>Résultats de l'extraction d'images</h1>
+    <img src="{{ url_for('serve_output_frames', filename=os.path.basename(result_image)) }}" alt="Collage Image">
+</body>
+</html>
