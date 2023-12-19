@@ -15,6 +15,7 @@ def extract_frames(video_path, output_folder, num_frames=4):
     clip = VideoFileClip(video_path)
     duration = int(clip.duration)
     clip.close()
+    print(f'duration : {duration}')
     # Choisissez 4 instants de temps aléatoires
     frame_indices = random.sample(range(duration), num_frames)
     print(f'Nombre de frames : {frame_indices}')
@@ -23,24 +24,39 @@ def extract_frames(video_path, output_folder, num_frames=4):
 
     for index in frame_indices:
         frame_name = f"frame_{index}.jpg"
-        clip.save_frame(os.path.join(output_folder, frame_name), t=duration)
+        clip.save_frame(os.path.join(output_folder, frame_name), t=index)
+        print(f'frame no {index} a été enregistrée')
 
     clip.close()
-
     return frame_paths
 
-def create_collage(frame_paths, output_folder):
-    # Choisissez 4 images aléatoires parmi celles extraites
-    selected_frames = random.sample(frame_paths, 4)
+def create_collage():
+    output_folder = 'Uploads\output_frames'
+    if not os.path.exists(output_folder):
+        print(f"Le dossier {output_folder} n'existe pas.")
+        return
+    
+    # Lister les fichiers dans le dossier
+    files = os.listdir(output_folder)
+    
+    # Vérifier s'il y a au moins 4 fichiers dans le dossier
+    if len(files) < 4:
+        print(f"Le dossier doit contenir au moins 4 images.")
+        return
 
-    # Chargez les images sélectionnées
-    images = [cv2.imread(frame) for frame in selected_frames]
+    # Charger les 4 premières images
+    images = [cv2.imread(os.path.join(output_folder, files[i])) for i in range(4)]
 
-    # Créez une image en collant les 4 images ensemble
-    collage = cv2.vconcat([cv2.hconcat(images[:2]), cv2.hconcat(images[2:])])
+    # Créer un collage horizontal des images
+    collage_horizontal = cv2.hconcat(images[:2])
+    collage_horizontal_bottom = cv2.hconcat(images[2:])
+    
+    # Créer un collage vertical des deux collages horizontaux
+    collage_final = cv2.vconcat([collage_horizontal, collage_horizontal_bottom])
+    collage_path = os.path.join(output_folder, "collage.jpg")
 
-    # Enregistrez l'image de collage
-    result_image_path = os.path.join(output_folder, 'collage.jpg')
-    cv2.imwrite(result_image_path, collage)
+    # Enregistrer le collage final
+    cv2.imwrite(collage_path, collage_final)
+    print(f"Collage créé avec succès et enregistré sous {output_folder}.")
 
-    return result_image_path
+    return collage_path

@@ -6,6 +6,7 @@ import random
 import shutil
 import boto3
 import numpy as np
+import time
 from moviepy.editor import VideoFileClip
 
 @app.route('/')
@@ -17,6 +18,7 @@ def get_video_duration(video_url):
         clip = VideoFileClip(video_url)
         duration = clip.duration
         clip.close()
+        print(f'duration : {duration}')
         return duration
     except Exception as e:
         print(f"Erreur lors de la récupération des métadonnées de la vidéo : {e}")
@@ -24,13 +26,13 @@ def get_video_duration(video_url):
 
 def random_time_code(video_duration) : 
     timecode = round(np.random.uniform(0, video_duration),2)
+    print(f'timecode : {timecode}')
     return timecode
 
 def video_generator(video_folder):
     video_files_brut = video_folder.list_objects_v2(Bucket = 'films2023' )
     video_files = []
     for obj in video_files_brut.get('Contents', []):
-        print(obj['Key'])
         video_files.append(obj['Key'])
     print(video_files)
     random.shuffle(video_files)
@@ -38,7 +40,7 @@ def video_generator(video_folder):
         yield video_files.pop()
 
 def read_film_text(selected_video):
-    text_folder = 'app_s3/textes'  # Remplacez par le chemin de votre dossier de textes
+    text_folder = 'app/textes'  # Remplacez par le chemin de votre dossier de textes
     text_file_path = os.path.join(text_folder, os.path.splitext(selected_video)[0] + '.txt')
 
     # Lire le texte du fichier correspondant au film
@@ -49,7 +51,8 @@ def read_film_text(selected_video):
 
 @app.route('/process_video', methods=['POST', 'GET'])
 def process_video():
-    
+    time_start = time.time()
+    print(f'Time start : {time_start}')
     aws_access_key_id = 'AKIA6PN5NTY2E67H2T56'
     aws_secret_access_key = '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'
     region_name = 'eu-central-1'
@@ -80,18 +83,23 @@ def process_video():
 
         # Appel du script d'extraction d'images
         frame_images = video_extraction.extract_frames(video_path, output_folder)
+        frame_list = os.listdir(app.config['OUTPUT_FOLDER'])
+
 
         # Préparez les chemins complets des images
-        full_frame_paths = [os.path.join(app.config['OUTPUT_FOLDER'], os.path.basename(image)) for image in frame_images]
+        full_frame_paths = [os.path.join(app.config['OUTPUT_FOLDER'], os.path.basename(image)) for image in frame_list]
 
         # Appel du script pour coller les images en une seule
-        result_image_path = video_extraction.create_collage(full_frame_paths, output_folder)
-
+        result_image_path = video_extraction.create_collage()
+        print(f'Selected Video : {selected_video}')
         # Lire le texte du fichier correspondant au film
         film_text = read_film_text(selected_video)
 
         result_data.append({'image_path': result_image_path, 'film_text': film_text})
-
+        time_stop = time.time()
+        print(f'time stop : {time_stop}')
+        duree = time_stop - time_start
+        print(f'Durée : {duree}')
     return render_template('result.html', result_data=result_data, os=os)
 
 @app.route('/output_frames/<path:filename>')
