@@ -2,43 +2,30 @@
 import cv2
 import os
 import random
+import boto3
+from moviepy.editor import VideoFileClip
 
 def extract_frames(video_path, output_folder, num_frames=4):
     # Ouvrir la vidéo
-    cap = cv2.VideoCapture(video_path)
 
     # Créer le dossier de sortie s'il n'existe pas
     os.makedirs(output_folder, exist_ok=True)
 
-    # Obtenir la fréquence d'images de la vidéo
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-
-    # Calculer le nombre total de frames dans la vidéo
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
+    #Obtenir la durée de la vidéo
+    clip = VideoFileClip(video_path)
+    duration = int(clip.duration)
+    clip.close()
     # Choisissez 4 instants de temps aléatoires
-    frame_indices = random.sample(range(total_frames), num_frames)
-
+    frame_indices = random.sample(range(duration), num_frames)
+    print(f'Nombre de frames : {frame_indices}')
     frame_paths = []
+    clip = VideoFileClip(video_path)
 
     for index in frame_indices:
-        # Sauter à l'instant de temps choisi
-        cap.set(cv2.CAP_PROP_POS_FRAMES, index)
-
-        # Lire la frame
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        # Enregistrez la frame
         frame_name = f"frame_{index}.jpg"
-        frame_path = os.path.join(output_folder, frame_name)
-        cv2.imwrite(frame_path, frame)
-        frame_paths.append(frame_path)
+        clip.save_frame(os.path.join(output_folder, frame_name), t=duration)
 
-    # Fermer la vidéo
-    cap.release()
+    clip.close()
 
     return frame_paths
 
