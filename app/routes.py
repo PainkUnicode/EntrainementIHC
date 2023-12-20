@@ -33,7 +33,7 @@ def read_film_text(selected_video):
 
     return film_text
 
-@app.route('/process_video', methods=['POST', 'GET'])
+@app.route('/process_video', methods=['GET'])
 def process_video():
     time_start = time.time()
     print(f'Time start : {time_start}')
