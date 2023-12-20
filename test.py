@@ -3,6 +3,7 @@ from moviepy.editor import VideoFileClip
 from botocore.exceptions import NoCredentialsError
 import random
 import numpy as np
+
 # Configurer les informations d'identification AWS
 aws_access_key_id = 'AKIA6PN5NTY2E67H2T56'
 aws_secret_access_key = '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'

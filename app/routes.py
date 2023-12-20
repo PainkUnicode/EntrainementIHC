@@ -10,31 +10,15 @@ import time
 from moviepy.editor import VideoFileClip
 
 @app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html')
-
-def get_video_duration(video_url):
-    try:
-        clip = VideoFileClip(video_url)
-        duration = clip.duration
-        clip.close()
-        print(f'duration : {duration}')
-        return duration
-    except Exception as e:
-        print(f"Erreur lors de la récupération des métadonnées de la vidéo : {e}")
-        return None
-
-def random_time_code(video_duration) : 
-    timecode = round(np.random.uniform(0, video_duration),2)
-    print(f'timecode : {timecode}')
-    return timecode
 
 def video_generator(video_folder):
     video_files_brut = video_folder.list_objects_v2(Bucket = 'films2023' )
     video_files = []
     for obj in video_files_brut.get('Contents', []):
         video_files.append(obj['Key'])
-    print(video_files)
     random.shuffle(video_files)
     while video_files:
         yield video_files.pop()
@@ -82,7 +66,8 @@ def process_video():
         video_path = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': selected_video}, ExpiresIn=3600)
 
         # Appel du script d'extraction d'images
-        frame_images = video_extraction.extract_frames(video_path, output_folder)
+        result = video_extraction.extract_frames(selected_video, video_path, output_folder)
+        print(f'Frames Extraites : {result}')
         frame_list = os.listdir(app.config['OUTPUT_FOLDER'])
 
 
@@ -104,4 +89,4 @@ def process_video():
 
 @app.route('/output_frames/<path:filename>')
 def serve_output_frames(filename):
-    return send_from_directory(app.config['OUTPUT_FOLDER'], filename)
+    return send_from_directory(app.config['COLLAGE_FOLDER'], filename)
