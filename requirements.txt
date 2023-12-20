@@ -1,0 +1,5 @@
+Flask
+Boto3
+moviepy
+cv2
+gunicorn
