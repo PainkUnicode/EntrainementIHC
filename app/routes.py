@@ -50,7 +50,7 @@ def process_video():
     os.makedirs(output_folder, exist_ok=True)
 
     result_data = []
-
+    f = 0
     if request.method == 'GET':
         # Si la méthode est GET, cela signifie que l'utilisateur a cliqué sur le bouton de rechargement
         return render_template('result.html', result_data=[])
@@ -66,7 +66,7 @@ def process_video():
         video_path = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': selected_video}, ExpiresIn=3600)
 
         # Appel du script d'extraction d'images
-        result = video_extraction.extract_frames(selected_video, video_path, output_folder)
+        result = video_extraction.extract_frames(selected_video, video_path, output_folder, f)
         print(f'Frames Extraites : {result}')
         frame_list = os.listdir(app.config['OUTPUT_FOLDER'])
 

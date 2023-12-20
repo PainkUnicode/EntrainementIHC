@@ -74,3 +74,25 @@ button:hover {
     color: #ccc;
     font-style: italic;
 }
+
+/* Ajoutez ces styles à votre fichier static/styles.css */
+.slick-carousel {
+    width: 80%;
+    margin: auto;
+    z-index: 1;
+}
+
+/* Utilisez les classes .slick-prev et .slick-next pour les styles des flèches */
+.slick-prev, .slick-next {
+    font-size: 20px;
+    color: #fff;
+    background: #e50914;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.slick-prev:hover, .slick-next:hover {
+    background: #d10812;
+}

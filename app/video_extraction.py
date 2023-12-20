@@ -17,9 +17,7 @@ def afficher_duree(titre_recherche):
                 return duree_en_secondes
 
 
-def extract_frames(selected_video, video_path, output_folder, num_frames=4):
-    # Ouvrir la vidéo
-
+def extract_frames(selected_video, video_path, output_folder,f, num_frames=4):
     # Créer le dossier de sortie s'il n'existe pas
     os.makedirs(output_folder, exist_ok=True)
 
@@ -32,12 +30,14 @@ def extract_frames(selected_video, video_path, output_folder, num_frames=4):
     print(f'Nombre de frames : {frame_indices}')
     frame_paths = []
     clip = VideoFileClip(video_path)
-    f = 0
+        
     for index in frame_indices:
         f = f + 1
         frame_name = f"frame_{f}.jpg"
         clip.save_frame(os.path.join(output_folder, frame_name), t=index)
         print(f'frame no {f} a été enregistrée')
+        if f == 40 :
+            f = 0
 
     clip.close()
     return frame_paths
