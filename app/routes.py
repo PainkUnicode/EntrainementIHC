@@ -8,9 +8,8 @@ import boto3
 import numpy as np
 import time
 from moviepy.editor import VideoFileClip
-
 @app.route('/')
-@app.route('/index', methods=['GET'] )
+@app.route('/index')
 def index():
     return render_template('index.html')
 
@@ -33,7 +32,7 @@ def read_film_text(selected_video):
 
     return film_text
 
-@app.route('/process_video', methods=['GET'])
+@app.route('/process_video', methods=['POST', 'GET'])
 def process_video():
     time_start = time.time()
     print(f'Time start : {time_start}')
