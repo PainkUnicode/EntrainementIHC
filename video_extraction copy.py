@@ -16,25 +16,21 @@ def afficher_duree(titre_recherche):
             if titre.lower() == titre_recherche.lower():
                 return duree_en_secondes
 
-
-def extract_frames(selected_video, video_path, output_folder,f, num_frames=4):
+def extract_frames(selected_video, video_path, output_folder, num_frames=4):
     # Créer le dossier de sortie s'il n'existe pas
     os.makedirs(output_folder, exist_ok=True)
-
     #Obtenir la durée de la vidéo
     duration = int(afficher_duree(selected_video))
     print(f'duration : {duration}')
-
     # Choisissez 4 instants de temps aléatoires
+    frame_indices = []
     frame_indices = random.sample(range(duration), num_frames)
     print(f'Nombre de frames : {frame_indices}')
     clip = VideoFileClip(video_path)
-        
     for index in frame_indices:
         frame_name = f"frame_{index}.jpg"
         clip.save_frame(os.path.join(output_folder, frame_name), t=index)
         print(f'frame no {index} a été enregistrée')
-
     clip.close()
     return
 
@@ -46,7 +42,6 @@ def create_collage():
     if not os.path.exists(output_folder):
         print(f"Le dossier {output_folder} n'existe pas.")
         return
-    
     # Lister les fichiers dans le dossier
     files = os.listdir(frame_folder)
     print(files)
@@ -54,14 +49,11 @@ def create_collage():
     if len(files) < 4:
         print(f"Le dossier doit contenir au moins 4 images.")
         return
-
     # Charger les 4 premières images
     images = [cv2.imread(os.path.join(frame_folder, files[i])) for i in range(4)]
-
     # Créer un collage horizontal des images
     collage_horizontal = cv2.hconcat(images[:2])
     collage_horizontal_bottom = cv2.hconcat(images[2:])
-    
     # Créer un collage vertical des deux collages horizontaux
     collage_final = cv2.vconcat([collage_horizontal, collage_horizontal_bottom])
     collage_path = os.path.join(output_folder, "collage.jpg")
@@ -69,5 +61,4 @@ def create_collage():
     # Enregistrer le collage final
     cv2.imwrite(collage_path, collage_final)
     print(f"Collage créé avec succès et enregistré sous {output_folder}.")
-
     return collage_path
