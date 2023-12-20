@@ -14,6 +14,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(),'app', 'uploads')
 app.config['OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'app', 'uploads', 'output_frames')
 app.config['COLLAGE_FOLDER'] = os.path.join(os.getcwd(),'app','uploads', 'output_collage')
 app.config['SERVER_NAME'] = 'https://trainihc-2be6cffcaab9.herokuapp.com/'
+
 # Importez le module d'extraction d'images
 from app import video_extraction
 
