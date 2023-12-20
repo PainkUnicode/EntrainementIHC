@@ -3,3 +3,4 @@ Boto3
 moviepy
 opencv-python
 gunicorn
+flask-cors

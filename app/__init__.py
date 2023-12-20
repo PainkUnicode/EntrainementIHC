@@ -2,6 +2,7 @@
 import os
 from flask import Flask
 import boto3
+from flask_cors import CORS
 
 aws_access_key_id = 'AKIA6PN5NTY2E67H2T56'
 aws_secret_access_key = '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'
@@ -15,6 +16,7 @@ app.config['OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'app', 'uploads', 'outpu
 app.config['COLLAGE_FOLDER'] = os.path.join(os.getcwd(),'app','uploads', 'output_collage')
 app.config['SERVER_NAME'] = 'trainihc-2be6cffcaab9.herokuapp.com'
 
+CORS(app)
 # Importez le module d'extraction d'images
 from app import video_extraction
 
