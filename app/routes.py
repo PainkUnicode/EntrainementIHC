@@ -10,7 +10,7 @@ import time
 from moviepy.editor import VideoFileClip
 
 @app.route('/')
-@app.route('/index')
+@app.route('/index', methods=['GET'] )
 def index():
     return render_template('index.html')
 
