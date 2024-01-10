@@ -8,24 +8,82 @@ import boto3
 import numpy as np
 import time
 from moviepy.editor import VideoFileClip
+import cv2
 
 @app.route('/')
 @app.route('/index')
 def index():
     return render_template('index.html')
 
-def video_generator(video_folder):
-    video_files_brut = video_folder.list_objects_v2(Bucket = 'films2023' )
-    video_files = []
-    for obj in video_files_brut.get('Contents', []):
-        video_files.append(obj['Key'])
-    random.shuffle(video_files)
-    while video_files:
-        yield video_files.pop()
+def select_random_folder(s3, bucket_name):
+    # Liste tous les dossiers dans le bucket
+    response = s3.list_objects_v2(Bucket=bucket_name, Delimiter='/')
 
-def read_film_text(selected_video):
+    # Extrait la liste des dossiers
+    folders = [common_prefix['Prefix'] for common_prefix in response.get('CommonPrefixes', [])]
+
+    # Sélectionne un dossier aléatoire
+    selected_folder = random.choice(folders)
+
+    return selected_folder
+
+def download_random_images(s3, bucket_name, folder_path, download_path, num_images=4):
+
+    # Liste tous les objets dans le dossier
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_path)
+
+    # Extrait la liste des objets (fichiers) dans le dossier
+    objects = response.get('Contents', [])
+
+    # Sélectionne num_images objets aléatoires
+    selected_objects = random.sample(objects, min(num_images, len(objects)))
+
+    # Télécharge les objets sélectionnés dans le dossier de téléchargement
+    for obj in selected_objects:
+        key = obj['Key']
+        file_name = os.path.join(download_path, os.path.basename(key))
+        s3.download_file(bucket_name, key, file_name)
+        print(f"Image téléchargée : {file_name}")
+
+def create_collage():
+    output_folder = app.config['COLLAGE_FOLDER']
+    frame_folder = app.config['OUTPUT_FOLDER']
+    os.makedirs(output_folder, exist_ok=True)
+    print(output_folder)
+    if not os.path.exists(output_folder):
+        print(f"Le dossier {output_folder} n'existe pas.")
+        return
+    
+    # Lister les fichiers dans le dossier
+    files = os.listdir(frame_folder)
+    print(files)
+    # Vérifier s'il y a au moins 4 fichiers dans le dossier
+    if len(files) < 4:
+        print(f"Le dossier doit contenir au moins 4 images.")
+        return
+
+    # Charger les 4 premières images
+    images = [cv2.imread(os.path.join(frame_folder, files[i])) for i in range(4)]
+
+    # Créer un collage horizontal des images
+    collage_horizontal = cv2.hconcat(images[:2])
+    collage_horizontal_bottom = cv2.hconcat(images[2:])
+    
+    # Créer un collage vertical des deux collages horizontaux
+    collage_final = cv2.vconcat([collage_horizontal, collage_horizontal_bottom])
+    collage_path = os.path.join(output_folder, "collage.jpg")
+    print(collage_path)
+    # Enregistrer le collage final
+    cv2.imwrite(collage_path, collage_final)
+    print(f"Collage créé avec succès et enregistré sous {output_folder}.")
+
+    return collage_path
+
+def read_film_text(selected_folder):
     text_folder = 'app/textes'  # Remplacez par le chemin de votre dossier de textes
-    text_file_path = os.path.join(text_folder, os.path.splitext(selected_video)[0] + '.txt')
+    selected_folder = selected_folder.rstrip(os.path.sep)
+    base_name = os.path.splitext(selected_folder)[0]
+    text_file_path = os.path.join(text_folder, base_name + '.txt')
 
     # Lire le texte du fichier correspondant au film
     with open(text_file_path, 'r', encoding='utf-8') as text_file:
@@ -40,7 +98,7 @@ def process_video():
     aws_access_key_id = 'AKIA6PN5NTY2E67H2T56'
     aws_secret_access_key = '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'
     region_name = 'eu-central-1'
-    bucket_name = 'films2023'
+    bucket_name = 'frames2023'
     output_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'output_frames')
 
     s3 = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=region_name)
@@ -57,34 +115,13 @@ def process_video():
 
     # Effectuer le processus 10 fois
     for _ in range(1):
-        video_gen = video_generator(s3)
-        selected_video = next(video_gen, None)
 
-        if not selected_video:
-            break  # Si la liste est vide, sortez de la boucle
+       random_folder = select_random_folder(s3, bucket_name)
+       result = download_random_images(s3, bucket_name, random_folder, output_folder)
+       collage_path = create_collage()
+       film_text = read_film_text(random_folder)
+       result_data.append({'image_path': collage_path, 'film_text': film_text})
 
-        video_path = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': selected_video}, ExpiresIn=3600)
-
-        # Appel du script d'extraction d'images
-        result = video_extraction.extract_frames(selected_video, video_path, output_folder, f)
-        print(f'Frames Extraites : {result}')
-        frame_list = os.listdir(app.config['OUTPUT_FOLDER'])
-
-
-        # Préparez les chemins complets des images
-        full_frame_paths = [os.path.join(app.config['OUTPUT_FOLDER'], os.path.basename(image)) for image in frame_list]
-
-        # Appel du script pour coller les images en une seule
-        result_image_path = video_extraction.create_collage()
-        print(f'Selected Video : {selected_video}')
-        # Lire le texte du fichier correspondant au film
-        film_text = read_film_text(selected_video)
-
-        result_data.append({'image_path': result_image_path, 'film_text': film_text})
-        time_stop = time.time()
-        print(f'time stop : {time_stop}')
-        duree = time_stop - time_start
-        print(f'Durée : {duree}')
     return render_template('result.html', result_data=result_data, os=os)
 
 @app.route('/output_frames/<path:filename>')
